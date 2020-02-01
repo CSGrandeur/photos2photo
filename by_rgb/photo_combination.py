@@ -3,11 +3,9 @@ import numpy as np
 import cv2
 from collections import deque
 import photo_summary
+from config import *
 
-RET_SIZE = 64
-BLOCK_SIZE = 32
-
-
+rgb_res_cache = {}
 def search_rgb(rgb, color_map):
     """
     搜索符合RGB条件的图片
@@ -16,23 +14,30 @@ def search_rgb(rgb, color_map):
     q.append(rgb)
     vis = set()
     vis.add(rgb)
+    if rgb in rgb_res_cache:
+        return rgb_res_cache[rgb][np.random.randint(0, len(rgb_res_cache[rgb]))]
+    else:
+        rgb_res_cache[rgb] = []
     while len(q) > 0:
         R, G, B = q.popleft()
         if len(color_map[R][G][B]) > 0:
-            file_path = color_map[R][G][B][np.random.randint(0, len(color_map[R][G][B]))]
-            return file_path
+            # file_path = color_map[R][G][B][np.random.randint(0, len(color_map[R][G][B]))]
+            rgb_res_cache[rgb] += color_map[R][G][B]
+            if len(rgb_res_cache[rgb]) > 5:
+                return rgb_res_cache[rgb][np.random.randint(0, len(rgb_res_cache[rgb]))]
         for dx in [0, -1, 1]:
             for dy in [0, -1, 1]:
                 for dz in [0, -1, 1]:
                     R += dx
                     G += dy
                     B += dz
-                    if 0 <= R <= 255 and 0 <= G <= 255 and 0 <= B <= 255 and (R, G, B) not in vis:
+                    if 0 <= R < RGB_SCALE and 0 <= G < RGB_SCALE and 0 <= B < RGB_SCALE and (R, G, B) not in vis:
                         vis.add((R, G, B))
                         q.append((R, G, B))
 
 
 def generate_img(color_map, target_img):
+    target_img = (target_img.astype(np.float32) * RGB_SCALE / 256.0).astype(np.uint8)
     ret_img = np.zeros((target_img.shape[0] * BLOCK_SIZE, target_img.shape[1] * BLOCK_SIZE, 3), np.uint8)
     for i in range(target_img.shape[0]):
         for j in range(target_img.shape[1]):

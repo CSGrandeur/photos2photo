@@ -1,3 +1,4 @@
 tests
 *.pkl
 .idea
+__pycache__

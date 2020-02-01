@@ -5,6 +5,7 @@ import pickle
 from hashlib import md5
 from collections import deque
 from concurrent.futures import ProcessPoolExecutor
+from config import *
 
 
 def get_rect_img(img):
@@ -26,10 +27,9 @@ def get_img_rgb(file_path):
     """
     img = cv2.imread(file_path).astype(np.float32)
     img = get_rect_img(img)
-    img = cv2.resize(img, (256, 256))
-    B = int(img[..., 0].mean())
-    G = int(img[..., 1].mean())
-    R = int(img[..., 2].mean())
+    B = int(img[..., 0].mean() * RGB_SCALE / 256.0)
+    G = int(img[..., 1].mean() * RGB_SCALE / 256.0)
+    R = int(img[..., 2].mean() * RGB_SCALE / 256.0)
     return R, G, B
 
 
@@ -37,7 +37,7 @@ def summary(photo_path):
     """
     预处理影集，统计色彩分布
     """
-    color_map = [[[[] for _ in range(256)] for _ in range(256)] for _ in range(256)]
+    color_map = [[[[] for _ in range(RGB_SCALE)] for _ in range(RGB_SCALE)] for _ in range(RGB_SCALE)]
     dq = deque()
     dq.append(photo_path)
     cnt = 0
@@ -55,9 +55,6 @@ def summary(photo_path):
                 obj_ret = pr.submit(get_img_rgb, file_path)
                 obj_list.append((obj_ret, file_path))
 
-                # R, G, B = get_img_rgb(file_path)
-                # color_map[R][G][B].append(file_path)
-
     pr.shutdown()
     for item in obj_list:
         R, G, B = item[0].result()
@@ -66,7 +63,7 @@ def summary(photo_path):
 
 
 def get_summary(photo_path, refresh=False):
-    cache_name = md5(photo_path.encode(encoding='utf-8')).hexdigest() + '.pkl'
+    cache_name = md5(photo_path.encode(encoding='utf-8')).hexdigest() + '_' + str(RGB_SCALE) + '.pkl'
     if refresh is False and os.path.exists(cache_name):
         with open(cache_name, 'rb') as f:
             color_map = pickle.load(f)
