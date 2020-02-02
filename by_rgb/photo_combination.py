@@ -50,6 +50,7 @@ def generate_img(color_map, target_img):
             # print(i, j, obj_ret)
             obj_list.append((i, j, obj_ret))
 
+    pr.shutdown()
     for item in obj_list:
         i, j, block_obj = item
         img_file = block_obj.result()

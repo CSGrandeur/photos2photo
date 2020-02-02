@@ -6,13 +6,7 @@ from hashlib import md5
 import pickle
 import tools
 from concurrent.futures import ProcessPoolExecutor
-
-PROCESS_NUM = 4
-BLOCK_FEATURE_SIZE = 8
-RET_BLOCK_SIZE = 64
-RET_FEATURE_BLOCK_MAT_SIZE = 64
-LIMIT_SEARCH = None
-COLOR = True
+from config import *
 
 # the size of the short edge of the result image is RET_FEATURE_BLOCK_MAT_SIZE * RET_BLOCK_SIZE
 
@@ -33,7 +27,7 @@ class PhotoCombination:
             photo_summary = []
             obj_list = []
             for img_path in tools.walk_images(photo_path):
-                obj_ret = pr.submit(tools.get_rect_img, img_path, BLOCK_FEATURE_SIZE, COLOR)
+                obj_ret = pr.submit(tools.get_rect_img, img_path, BLOCK_FEATURE_SIZE)
                 obj_list.append((img_path, obj_ret))
             pr.shutdown()
             for item in obj_list:
@@ -77,20 +71,12 @@ class PhotoCombination:
         print("starting block searching")
         for i in range(0, img.shape[0] // BLOCK_FEATURE_SIZE):
             for j in range(0, img.shape[1] // BLOCK_FEATURE_SIZE):
-                if COLOR:
-                    block_search = img[
-                       i * BLOCK_FEATURE_SIZE: (i + 1) * BLOCK_FEATURE_SIZE,
-                       j * BLOCK_FEATURE_SIZE: (j + 1) * BLOCK_FEATURE_SIZE,
-                       :
-                    ]
-                else:
-                    block_search = img[
-                       i * BLOCK_FEATURE_SIZE: (i + 1) * BLOCK_FEATURE_SIZE,
-                       j * BLOCK_FEATURE_SIZE: (j + 1) * BLOCK_FEATURE_SIZE
-                    ]
-
-                obj_ret = pr.submit(tools.search_block, block_search, photo_summary, RET_BLOCK_SIZE, LIMIT_SEARCH, COLOR)
-                # obj_ret = tools.search_block(block_search, photo_summary, RET_BLOCK_SIZE, LIMIT_SEARCH)
+                block_search = img[
+                   i * BLOCK_FEATURE_SIZE: (i + 1) * BLOCK_FEATURE_SIZE,
+                   j * BLOCK_FEATURE_SIZE: (j + 1) * BLOCK_FEATURE_SIZE
+                ]
+                obj_ret = pr.submit(tools.search_block, block_search, photo_summary)
+                # obj_ret = tools.search_block(block_search, photo_summary)
                 # print(i, j)
                 obj_list.append((i, j, obj_ret))
 

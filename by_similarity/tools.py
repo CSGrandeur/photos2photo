@@ -4,7 +4,7 @@ import random
 import numpy as np
 import cv2
 from collections import deque
-
+from config import *
 
 def walk_images(photo_path):
     """
@@ -22,11 +22,11 @@ def walk_images(photo_path):
                 yield file_path
 
 
-def get_rect_img(img_path, size=32, color=True):
+def get_rect_img(img_path, size=32):
     """
     取图像中间部分的正方形
     """
-    if color:
+    if COLOR:
         img = cv2.imread(img_path)
         height, width, _ = img.shape
     else:
@@ -55,18 +55,17 @@ def block_distance(block_1, block_2):
     return np.linalg.norm(block_1.astype(np.float32) / 255.0 - block_2.astype(np.float32) / 255.0)
 
 
-def search_block(block_s, photo_summary, ret_block_size, limit=None, color=True):
-    min_distance = 1e9
-    photo_path = ''
+def search_block(block_s, photo_summary):
     datalen = len(photo_summary)
-    if limit is not None:
+    if LIMIT_SEARCH is not None:
         random.shuffle(photo_summary)
-    for i in range(datalen if limit is None else limit):
+    res_list = []
+    for i in range(datalen if LIMIT_SEARCH is None else LIMIT_SEARCH):
         block_obj = photo_summary[i]
         block = block_obj[1]
         dis = block_distance(block_s, block)
-        if dis < min_distance:
-            min_distance = dis
-            photo_path = block_obj[0]
-    photo_ret = get_rect_img(photo_path, ret_block_size, color)
+        res_list.append((dis, i))
+    res_list = sorted(res_list)
+    photo_path = photo_summary[res_list[np.random.randint(0, min(len(res_list), SIMILAR_CANDIDATE))][1]][0]
+    photo_ret = get_rect_img(photo_path, RET_BLOCK_SIZE)
     return photo_ret
