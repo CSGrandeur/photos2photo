@@ -41,7 +41,7 @@ def summary(photo_path):
     dq = deque()
     dq.append(photo_path)
     cnt = 0
-    pr = ProcessPoolExecutor(4)
+    pr = ProcessPoolExecutor(PROCESS_NUM)
     obj_list = []
     while len(dq) > 0:
         cur_path = dq.pop()

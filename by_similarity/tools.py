@@ -42,16 +42,16 @@ def get_rect_img(img_path, size=32, color=True):
 
 
 def block_distance(block_1, block_2):
-    block_1 = block_1.astype(np.float32)
-    block_2 = block_2.astype(np.float32)
-    if len(block_1.shape) == 2:
-        block_1 = cv2.dct(block_1)
-        block_2 = cv2.dct(block_2)
-    else:
-        for i in range(3):
-            block_1[..., i] = cv2.dct(block_1[..., i])
-            block_2[..., i] = cv2.dct(block_2[..., i])
-    # return np.linalg.norm(cv2.dct(block_1.astype(np.float32)) - cv2.dct(block_2.astype(np.float32)))
+    # block_1 = block_1.astype(np.float32)
+    # block_2 = block_2.astype(np.float32)
+    # if len(block_1.shape) == 2:
+    #     block_1 = cv2.dct(block_1)
+    #     block_2 = cv2.dct(block_2)
+    # else:
+    #     for i in range(3):
+    #         block_1[..., i] = cv2.dct(block_1[..., i])
+    #         block_2[..., i] = cv2.dct(block_2[..., i])
+
     return np.linalg.norm(block_1.astype(np.float32) / 255.0 - block_2.astype(np.float32) / 255.0)
 
 
