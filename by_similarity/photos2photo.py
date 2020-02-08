@@ -27,6 +27,11 @@ class PhotoCombination:
             photo_summary = []
             obj_list = []
             for img_path in tools.walk_images(photo_path):
+                if DEBUG:
+                    img = cv2.imread(img_path)
+                    if img is None:
+                        continue
+                    print(img.shape)
                 obj_ret = pr.submit(tools.get_rect_img, img_path, BLOCK_FEATURE_SIZE)
                 obj_list.append((img_path, obj_ret))
             pr.shutdown()
@@ -54,7 +59,7 @@ class PhotoCombination:
         if height > width:
             img = img[:img.shape[0] // BLOCK_FEATURE_SIZE * BLOCK_FEATURE_SIZE]
         else:
-            img = img[:, img.shape[1] // BLOCK_FEATURE_SIZE * BLOCK_FEATURE_SIZE]
+            img = img[:, :img.shape[1] // BLOCK_FEATURE_SIZE * BLOCK_FEATURE_SIZE]
 
         if COLOR:
             ret_img = np.zeros((
@@ -75,18 +80,21 @@ class PhotoCombination:
                    i * BLOCK_FEATURE_SIZE: (i + 1) * BLOCK_FEATURE_SIZE,
                    j * BLOCK_FEATURE_SIZE: (j + 1) * BLOCK_FEATURE_SIZE
                 ]
-                obj_ret = pr.submit(tools.search_block, block_search, photo_summary)
-                # obj_ret = tools.search_block(block_search, photo_summary)
-                # print(i, j)
+                if MULTI_PROCESS:
+                    obj_ret = pr.submit(tools.search_block, block_search, photo_summary)
+                else:
+                    obj_ret = tools.search_block(block_search, photo_summary)
                 obj_list.append((i, j, obj_ret))
 
         pr.shutdown()
         print("block searching finished")
         for item in obj_list:
             i, j, block_obj = item
-            block = block_obj.result()
-            # block = block_obj
-            # print(i, j)
+
+            if MULTI_PROCESS:
+                block = block_obj.result()
+            else:
+                block = block_obj
             if COLOR:
                 ret_img[
                    i * RET_BLOCK_SIZE: (i + 1) * RET_BLOCK_SIZE,
